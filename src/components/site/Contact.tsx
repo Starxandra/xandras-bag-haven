@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { CheckCircle2, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { CheckCircle2, Loader2, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { BUSINESS, waLink } from "@/data/products";
+import { submitEnquiry } from "@/lib/enquiries.functions";
 
 const fieldClass =
   "w-full rounded-2xl border border-border bg-card px-4 py-3.5 text-base outline-none transition-colors placeholder:text-muted-foreground focus:border-gold";
@@ -8,6 +10,43 @@ const fieldClass =
 export function Contact() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [sent, setSent] = useState(false);
+  const [emailed, setEmailed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const send = useServerFn(submitEnquiry);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (sending) return;
+    setError(null);
+
+    const name = form.name.trim();
+    const email = form.email.trim();
+    const phone = form.phone.trim();
+    const message = form.message.trim();
+
+    if (name.length < 2) return setError("Please enter your full name.");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return setError("Please enter a valid email address.");
+    if (phone.replace(/\D/g, "").length < 7)
+      return setError("Please enter a valid phone number.");
+    if (message.length < 5) return setError("Please tell us a little more about your enquiry.");
+
+    setSending(true);
+    try {
+      const result = await send({ data: { name, email, phone, message } });
+      setEmailed(result.emailed);
+      setSent(true);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Sorry, your enquiry could not be sent. Please try again or reach us on WhatsApp.",
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   return (
     <section id="contact" className="scroll-mt-24 border-t border-border py-16 lg:py-24">
