@@ -31,40 +31,23 @@ export const submitEnquiry = createServerFn({ method: "POST" })
       throw new Error("We could not submit your enquiry. Please try again.");
     }
 
-    let emailed = false;
-    let emailError: string | null = null;
+    let sent = false;
+    let reason: string | null = null;
 
     try {
-      const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-      const result = await sendTemplateEmail("enquiry-notification", "Njokuesther923@gmail.com", {
-        templateData: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          message: data.message,
-        },
-        idempotencyKey: `enquiry-notification-${row.id}`,
-      });
-      emailed = result.sent === true;
-      if (!emailed) emailError = result.reason ?? "not_sent";
+      const { sendEnquiryNotification } = await import("@/lib/email-notify.server");
+      const result = await sendEnquiryNotification({ ...data, enquiryId: row.id });
+      sent = result.sent;
+      reason = result.sent ? null : (result.reason ?? "not_sent");
     } catch (err) {
-      emailError = err instanceof Error ? err.message : "email_unavailable";
+      reason = err instanceof Error ? err.message : "email_unavailable";
       console.error("Failed to email enquiry", err);
     }
 
     await supabaseAdmin
       .from("enquiries")
-      .update({
-        email_status: emailed ? "sent" : "failed",
-        email_error: emailError,
-      })
+      .update({ email_status: sent ? "sent" : "failed", email_error: reason })
       .eq("id", row.id);
 
-    if (!emailed) {
-      throw new Error(
-        "Your enquiry was saved but we could not email it right now. Please reach us on WhatsApp so we can respond immediately.",
-      );
-    }
-
-    return { id: row.id, emailed: true };
+    return { id: row.id, emailed: sent };
   });
