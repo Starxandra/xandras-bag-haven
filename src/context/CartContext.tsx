@@ -82,7 +82,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }
           return [
             ...prev,
-            { id: product.id, quantity, colour: colour ?? product.colours[0] },
+            { id: product.id, quantity, colour: colour ?? product.colours[0]! },
           ];
         }),
       setQuantity: (id, quantity) =>
