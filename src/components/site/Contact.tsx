@@ -107,15 +107,22 @@ export function Contact() {
           {sent ? (
             <div className="py-10 text-center">
               <CheckCircle2 className="mx-auto h-11 w-11 text-gold" />
-              <p className="mt-4 font-display text-2xl">Message sent</p>
+              <p className="mt-4 font-display text-2xl">Enquiry received</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Thank you {form.name || "for reaching out"}! We have received your
-                enquiry and will get back to you shortly.
+                Thank you {form.name || "for reaching out"}! Your enquiry has been
+                recorded{emailed ? " and sent to our inbox" : ""} and we will get back to
+                you shortly.
               </p>
+              {!emailed && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  For the fastest reply, you can also send us the same message on WhatsApp.
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => {
                   setSent(false);
+                  setEmailed(false);
                   setForm({ name: "", email: "", phone: "", message: "" });
                 }}
                 className="mt-6 rounded-full border border-border bg-card px-6 py-3 text-xs tracking-[0.16em] uppercase"
@@ -124,13 +131,8 @@ export function Contact() {
               </button>
             </div>
           ) : (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSent(true);
-              }}
-              className="flex flex-col gap-3"
-            >
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+
               <h3 className="font-display text-2xl">Send an Enquiry</h3>
               <input
                 required
@@ -168,12 +170,20 @@ export function Contact() {
                 aria-label="Message"
                 className={fieldClass}
               />
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              )}
               <button
                 type="submit"
-                className="rounded-full bg-primary py-4 text-xs font-medium tracking-[0.16em] text-primary-foreground uppercase"
+                disabled={sending}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary py-4 text-xs font-medium tracking-[0.16em] text-primary-foreground uppercase disabled:opacity-60"
               >
-                Submit
+                {sending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {sending ? "Sending…" : "Submit"}
               </button>
+
             </form>
           )}
         </div>
