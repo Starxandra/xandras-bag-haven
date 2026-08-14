@@ -170,12 +170,20 @@ export function Contact() {
                 aria-label="Message"
                 className={fieldClass}
               />
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
+                </p>
+              )}
               <button
                 type="submit"
-                className="rounded-full bg-primary py-4 text-xs font-medium tracking-[0.16em] text-primary-foreground uppercase"
+                disabled={sending}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-primary py-4 text-xs font-medium tracking-[0.16em] text-primary-foreground uppercase disabled:opacity-60"
               >
-                Submit
+                {sending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {sending ? "Sending…" : "Submit"}
               </button>
+
             </form>
           )}
         </div>
